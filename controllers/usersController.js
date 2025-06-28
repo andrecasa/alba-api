@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.getAll = async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM users ORDER BY user_id');
+    const { rows } = await pool.query('SELECT user_id, user_name, user_email, user_active FROM users ORDER BY user_id');
     res.status(200).json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -26,14 +26,15 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   const { user_name, user_email, user_password, user_active } = req.body;
-  if (!user_name || !user_email || !user_password || !user_active) {
+  console.log(user_active)
+  if (!user_name || !user_email || !user_password) {
     return res.status(400).json({ error: 'user_name, user_email, user_active and user_password are required' });
   }
   try {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(user_password, saltRounds);
     const { rows } = await pool.query(
-      'INSERT INTO users (user_name, user_email, user_password, user_active) VALUES ($1, $2, $3, $4) RETURNING *',
+      'INSERT INTO users (user_name, user_email, user_password, user_active) VALUES ($1, $2, $3, $4) RETURNING user_id, user_name, user_email, user_active',
       [user_name, user_email, hashedPassword, user_active ]
     );
     res.status(201).json(rows[0]);
@@ -44,9 +45,9 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { user_id } = req.params;
-  const { user_name, user_email, user_password } = req.body;
-  if (!user_name && !user_email && !user_password) {
-    return res.status(400).json({ error: 'At least one field (user_name, user_email, user_password) is required' });
+  const { user_name, user_email, user_password, user_active } = req.body;
+  if (!user_name && !user_email) {
+    return res.status(400).json({ error: 'At least one field (user_name, user_email, user_active) is required' });
   }
   const fields = [];
   const values = [];
@@ -60,6 +61,10 @@ exports.update = async (req, res) => {
     fields.push(`user_email = $${idx++}`);
     values.push(user_email);
   }
+  if (typeof user_active === 'boolean') {
+    fields.push(`user_active = $${idx++}`);
+    values.push(user_active);
+  }
   if (user_password) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(user_password, saltRounds);
@@ -70,7 +75,7 @@ exports.update = async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `UPDATE users SET ${fields.join(', ')} WHERE user_id = $${idx} RETURNING *`,
+      `UPDATE users SET ${fields.join(', ')} WHERE user_id = $${idx} RETURNING user_id, user_name, user_email, user_active`,
       values
     );
     if (rows.length === 0) {
