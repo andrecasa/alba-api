@@ -9,7 +9,7 @@ exports.login = async (req, res) => {
   }
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM users WHERE user_email = $1',
+      'SELECT * FROM users WHERE user_email = $1 AND user_active is true',
       [user_email]
     );
     if (rows.length === 0) {
@@ -21,7 +21,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const token = jwt.sign(
-      { user_id: user.user_id, user_email: user.user_email },
+      { user_id: user.user_id, user_name: user.user_name, user_email: user.user_email, user_image: user.user_image },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRATION_TIME }
     );
