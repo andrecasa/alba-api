@@ -3,18 +3,6 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const path = require('path');
 
- // Configuração do multer para salvar na pasta /upload
- const storage = multer.diskStorage({
-   destination: (req, file, cb) => {
-     cb(null, path.join(__dirname, '..', 'upload'));
-   },
-   filename: (req, file, cb) => {
-     const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
-     cb(null, uniqueName);
-   }
- });
- const upload = multer({ storage });
-
 exports.getAll = async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT user_id, user_name, user_email, user_active FROM users ORDER BY user_id');
@@ -39,7 +27,6 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   const { user_name, user_email, user_password, user_active } = req.body;
-  console.log(user_active)
   if (!user_name || !user_email || !user_password) {
     return res.status(400).json({ error: 'user_name, user_email, user_active and user_password are required' });
   }
@@ -114,6 +101,37 @@ exports.delete = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+};
+
+exports.avatar = async (req, res) => {
+  const { user_id } = req.params;
+  const url_folder = 'upload/avatar';
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, '..', url_folder));
+    },
+    filename: (req, file, cb) => {
+      const uniqueName = `${user_id}${path.extname(file.originalname)}`;
+      cb(null, uniqueName);
+    }
+  });
+  const upload = multer({ storage });
+
+  upload.single('avatar')(req, res, async (err) => {
+    if (err || !req.file || !user_id) {
+      return res.status(400).json({ error: 'No file uploaded or user_id missing' });
+    }
+    try {
+      const url_image = `${url_folder}/${req.file.filename}`;
+      await pool.query(
+        'UPDATE users SET user_image = $1 WHERE user_id = $2',
+        [url_image, user_id]
+      );
+      res.status(200).json(req.file.filename);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 };
 
 

@@ -18,9 +18,6 @@ app.use('/auth', authRoutes);
 const userRoutes = require('./routes/users');
 app.use('/users', userRoutes);
 
-const avatarRoutes = require('./routes/avatar');
-app.use('/avatar', avatarRoutes);
-
 app.use('/upload', express.static('upload'));
 
 app.listen(port, () => {
