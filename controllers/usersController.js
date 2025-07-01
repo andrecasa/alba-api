@@ -45,8 +45,8 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { user_id } = req.params;
-  const { user_name, user_email, user_password, user_active } = req.body;
-  if (!user_name && !user_email) {
+  const { user_name, user_email, user_password, user_active, user_updated_at } = req.body;
+  if (!user_name || !user_email) {
     return res.status(400).json({ error: 'At least one field (user_name, user_email, user_active) is required' });
   }
   const fields = [];
@@ -71,6 +71,8 @@ exports.update = async (req, res) => {
     fields.push(`user_password = $${idx++}`);
     values.push(hashedPassword);
   }
+
+  fields.push(`user_updated_at = NOW()`);
   values.push(user_id);
 
   try {

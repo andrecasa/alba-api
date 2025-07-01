@@ -23,4 +23,3 @@ app.use('/upload', express.static('upload'));
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
-
