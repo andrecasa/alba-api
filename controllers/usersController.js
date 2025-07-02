@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const path = require('path');
 
-exports.getAll = async (req, res) => {
+exports.list = async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT user_id, user_name, user_email, user_active FROM users ORDER BY user_id');
     res.status(200).json(rows);

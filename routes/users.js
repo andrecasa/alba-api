@@ -7,7 +7,7 @@ const path = require('path');
 
 router.use(jwtAuth);
 
-router.get('/all', userController.getAll);
+router.get('/list', userController.list);
 router.get('/:user_id', userController.getById);
 router.post('/', userController.create);
 router.put('/:user_id', userController.update);
